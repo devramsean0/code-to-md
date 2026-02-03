@@ -13,7 +13,17 @@ fn main() {
     let args = Args::parse();
     let mut items: Vec<Item> = vec![];
 
-    for result in ignore::Walk::new(args.path) {
+    for result in ignore::WalkBuilder::new(args.path)
+        .sort_by_file_path(|a, b| {
+            // Directories first, then files alphabetically
+            match (a.is_dir(), b.is_dir()) {
+                (true, false) => std::cmp::Ordering::Less,
+                (false, true) => std::cmp::Ordering::Greater,
+                _ => a.cmp(b),
+            }
+        })
+        .build()
+    {
         match result {
             Ok(p) => {
                 if !p.path().is_dir() {
@@ -33,7 +43,7 @@ fn main() {
     // Incredibly awful templater
     let mut md_contents: Vec<String> = vec![];
     for item in items {
-        md_contents.push(format!("# {}", item.path));
+        md_contents.push(format!("## {}", item.path));
         let extension = item.path.split(".").last().unwrap();
         md_contents.push(format!("```{extension}\n{}\n```", item.contents))
     }
