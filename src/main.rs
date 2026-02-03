@@ -1,8 +1,7 @@
-use std::{fs, path::Path};
+use std::fs;
 
 use clap::Parser;
-
-mod walker;
+use log::error;
 
 #[derive(Parser)]
 struct Args {
@@ -14,15 +13,19 @@ fn main() {
     let args = Args::parse();
     let mut items: Vec<Item> = vec![];
 
-    let mut walk = walker::Walk::new(Path::new(&args.path));
-    while let Some(p) = walk.next() {
-        if !p.is_dir() {
-            if let Ok(file) = fs::read_to_string(p.clone().as_path()) {
-                items.push(Item {
-                    path: p.to_string_lossy().to_string(),
-                    contents: file,
-                });
+    for result in ignore::Walk::new(args.path) {
+        match result {
+            Ok(p) => {
+                if !p.path().is_dir() {
+                    if let Ok(file) = fs::read_to_string(p.clone().path()) {
+                        items.push(Item {
+                            path: p.path().to_string_lossy().to_string(),
+                            contents: file,
+                        });
+                    }
+                }
             }
+            Err(e) => error!("Error walking tree: {e}"),
         }
     }
     println!("Found {} files", items.len());
