@@ -7,6 +7,9 @@ use log::error;
 struct Args {
     #[arg()]
     path: String,
+
+    #[arg(short, long)]
+    desc_file: Option<String>,
 }
 
 fn main() {
@@ -42,6 +45,10 @@ fn main() {
 
     // Incredibly awful templater
     let mut md_contents: Vec<String> = vec![];
+    if args.desc_file.is_some() {
+        let header = fs::read_to_string(args.desc_file.unwrap()).unwrap();
+        md_contents.push(header);
+    }
     for item in items {
         md_contents.push(format!("## {}", item.path));
         let extension = item.path.split(".").last().unwrap();

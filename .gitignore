@@ -5,4 +5,5 @@
 
 /.pre-commit-config.yaml
 
+/.header.md
 output.md
