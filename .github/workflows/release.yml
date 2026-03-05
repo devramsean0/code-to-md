@@ -38,22 +38,8 @@ jobs:
             mv target/${{ matrix.rust_target }}/release/code-to-md ${{ matrix.artifact_name }}
           fi
 
-      - name: determine tag type
-        id: tag_type
-        run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then
-            echo "tag_type=PRE_RELEASE_TAG" >> $GITHUB_OUTPUT
-          elif [[ ${{ github.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "tag_type=RELEASE_TAG" >> $GITHUB_OUTPUT
-          else
-            echo "tag_type=INVALID_TAG" >> $GITHUB_OUTPUT
-          fi
-
-      - name: upload binaries to release
-        if: steps.tag_type.outputs.tag_type != 'INVALID_TAG'
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          file: ${{ matrix.artifact_name }}
-          overwrite: true
-          prerelease: ${{ steps.tag_type.outputs.tag_type == 'PRE_RELEASE_TAG' }}
-          tag: ${{ github.ref }}
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
